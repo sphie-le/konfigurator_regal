@@ -17,6 +17,7 @@
         'next-themes@0.4.6': 'next-themes',
         'lucide-react@0.487.0': 'lucide-react',
         'input-otp@1.4.2': 'input-otp',
+        'figma:asset/f4887afce26705f252e8527d7d610faf75a2f1c7.png': path.resolve(__dirname, './src/assets/f4887afce26705f252e8527d7d610faf75a2f1c7.png'),
         'figma:asset/edce7739b3638cb4b2850cfd31ccb8b7d0f7517d.png': path.resolve(__dirname, './src/assets/edce7739b3638cb4b2850cfd31ccb8b7d0f7517d.png'),
         'figma:asset/b9e87818d1ddf12cb405d3e54c715601e6931683.png': path.resolve(__dirname, './src/assets/b9e87818d1ddf12cb405d3e54c715601e6931683.png'),
         'figma:asset/b4b3ad5601491d9844b87fb25fbeeafd51e6d696.png': path.resolve(__dirname, './src/assets/b4b3ad5601491d9844b87fb25fbeeafd51e6d696.png'),
@@ -56,7 +57,7 @@
     },
     build: {
       target: 'esnext',
-      outDir: 'build',
+      outDir: 'dist',
     },
     server: {
       port: 3000,

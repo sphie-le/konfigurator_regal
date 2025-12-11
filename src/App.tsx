@@ -1,35 +1,65 @@
-import React from 'react';
-import { ImageWithFallback } from './components/figma/ImageWithFallback';
-import imgT2 from 'figma:asset/edce7739b3638cb4b2850cfd31ccb8b7d0f7517d.png';
-import imgT3 from 'figma:asset/b4b3ad5601491d9844b87fb25fbeeafd51e6d696.png';
-import imgT4 from 'figma:asset/b9e87818d1ddf12cb405d3e54c715601e6931683.png';
-import imgT5 from 'figma:asset/1a8ad80399b6549cfba16c958beaa5ea548e1a9a.png';
-import imgK from 'figma:asset/08136ca489a3bad40376f4af4a2d54530754eba6.png';
+import React from "react";
+import { ImageWithFallback } from "./components/figma/ImageWithFallback";
+import imgT2 from "figma:asset/edce7739b3638cb4b2850cfd31ccb8b7d0f7517d.png";
+import imgT3 from "figma:asset/b4b3ad5601491d9844b87fb25fbeeafd51e6d696.png";
+import imgT4 from "figma:asset/b9e87818d1ddf12cb405d3e54c715601e6931683.png";
+import imgT5 from "figma:asset/1a8ad80399b6549cfba16c958beaa5ea548e1a9a.png";
+import imgK from "figma:asset/08136ca489a3bad40376f4af4a2d54530754eba6.png";
+import logo from "figma:asset/f4887afce26705f252e8527d7d610faf75a2f1c7.png";
 
 export default function App() {
   const [modules, setModules] = React.useState([]);
-  const [expandedType, setExpandedType] = React.useState('');
+  const [expandedType, setExpandedType] = React.useState("");
   const [hoveredId, setHoveredId] = React.useState(null);
+  const [customerName, setCustomerName] = React.useState("");
+  const [customerEmail, setCustomerEmail] = React.useState("");
+  const [customerMessage, setCustomerMessage] = React.useState("");
+  const [pendingModule, setPendingModule] = React.useState(null); // {type, length}
+  
+  // Ref für den Viewport Container
+  const viewportRef = React.useRef(null);
+  const [viewportSize, setViewportSize] = React.useState({ width: 1000, height: 600 });
+
+  // Messe die tatsächliche Viewport-Größe
+  React.useEffect(() => {
+    const updateSize = () => {
+      if (viewportRef.current) {
+        const rect = viewportRef.current.getBoundingClientRect();
+        setViewportSize({ 
+          width: rect.width - 96, // Minus padding (48px * 2)
+          height: rect.height - 96 
+        });
+      }
+    };
+    
+    updateSize();
+    window.addEventListener('resize', updateSize);
+    return () => window.removeEventListener('resize', updateSize);
+  }, []);
 
   const addModule = (type, length, position) => {
-    const newMod = { id: Date.now(), type: type, length: length };
+    const newMod = {
+      id: Date.now(),
+      type: type,
+      length: length,
+    };
     const arr = [];
-    
-    if (position === 'left') {
+
+    if (position === "left") {
       arr.push(newMod);
-      modules.forEach(m => arr.push(m));
+      modules.forEach((m) => arr.push(m));
     } else {
-      modules.forEach(m => arr.push(m));
+      modules.forEach((m) => arr.push(m));
       arr.push(newMod);
     }
-    
+
     setModules(arr);
-    setExpandedType('');
+    setExpandedType("");
   };
 
   const removeModule = (id) => {
     const arr = [];
-    modules.forEach(m => {
+    modules.forEach((m) => {
       if (m.id !== id) arr.push(m);
     });
     setModules(arr);
@@ -37,87 +67,105 @@ export default function App() {
 
   const getHeight = (type) => {
     const sc = 0.2133;
-    if (type === 'T2') return 510 * sc;
-    if (type === 'T3') return 940 * sc;
-    if (type === 'T4') return 1370 * sc;
-    if (type === 'T5') return 1800 * sc;
-    if (type === 'K') return 1800 * sc;
+    if (type === "T2") return 510 * sc;
+    if (type === "T3") return 940 * sc;
+    if (type === "T4") return 1370 * sc;
+    if (type === "T5") return 1800 * sc;
+    if (type === "K") return 1800 * sc;
     return 384;
   };
 
   const getPositions = (type, h) => {
     const thick = 35 * 0.2133; // 35mm Brettstärke
     const sc = 0.2133;
-    
-    if (type === 'K') {
+
+    if (type === "K") {
       // K: Unterstes Brett 90mm vom Boden, oberstes schließt ab
       const bb = 90 * sc; // 90mm vom Boden
       return [0, h - bb - thick]; // [oberes Brett ganz oben, unteres Brett 90mm vom Boden]
     }
-    
+
     // T2, T3, T4, T5: Oberstes Brett schließt bündig ab (Position 0)
     // Alle anderen Bretter auf denselben absoluten Höhen vom Boden
     // Brett 1: 45mm vom Boden
     // Brett 2: 475mm vom Boden (bei T2, T3, T4, T5)
     // Brett 3: 905mm vom Boden (bei T3, T4, T5)
     // Brett 4: 1335mm vom Boden (bei T4, T5)
-    
+
     const num = parseInt(type.substring(1));
     const arr = [];
-    
+
     // Oberstes Brett schließt immer bündig ab
     arr.push(0);
-    
+
     // Berechne die unteren Bretter auf festen absoluten Höhen vom Boden
     const bottomGap = 45 * sc; // 45mm vom Boden
     const gap = 395 * sc; // 395mm Abstand zwischen Oberkante und Unterkante
-    
+
     // Füge die unteren Bretter hinzu (von oben nach unten in der Array-Reihenfolge)
     for (let i = num - 2; i >= 0; i--) {
       const fromBottom = bottomGap + i * (thick + gap);
       const y = h - fromBottom - thick;
       arr.push(y);
     }
-    
+
     return arr;
   };
 
   const getModuleImage = (typeId) => {
-    if (typeId === 'T2') return imgT2;
-    if (typeId === 'T3') return imgT3;
-    if (typeId === 'T4') return imgT4;
-    if (typeId === 'T5') return imgT5;
-    if (typeId === 'K') return imgK;
+    if (typeId === "T2") return imgT2;
+    if (typeId === "T3") return imgT3;
+    if (typeId === "T4") return imgT4;
+    if (typeId === "T5") return imgT5;
+    if (typeId === "K") return imgK;
     return null;
   };
 
   const renderModulePreview = (typeId) => {
     // Fallback falls Bilder nicht geladen werden
-    return '📦';
+    return "📦";
   };
 
   const types = [
-    { id: 'T2', name: '2 Regalflächen', h: 510 },
-    { id: 'T3', name: '3 Regalbretter', h: 940 },
-    { id: 'T4', name: '4 Regalbretter', h: 1370 },
-    { id: 'T5', name: '5 Regalbretter', h: 1800 },
-    { id: 'K', name: 'Mit Kleiderstange', h: 1800 },
+    { id: "T2", name: "2 Regalflächen", h: 51 },
+    { id: "T3", name: "3 Regalflächen", h: 94 },
+    { id: "T4", name: "4 Regalflächen", h: 137 },
+    { id: "T5", name: "5 Regalflächen", h: 180 },
+    { id: "K", name: "Mit Kleiderstange", h: 180 },
   ];
 
+  const railWidth = 35 * 0.2133; // 35mm Leistenbreite in Pixel
+
+  // Gesamtlänge berechnen: Erstes Modul = Regalbrett + 7cm, jedes weitere = Regalbrett + 3,5cm
   let totLen = 0;
   let totW = 0;
-  modules.forEach(m => {
-    totLen += m.length === 'short' ? 35 : 57.5;
-    totW += m.length === 'short' ? 80 : 128;
+  let totModuleWidth = 0; // Tatsächliche Pixel-Breite für die Visualisierung
+  modules.forEach((m, idx) => {
+    const shelfLen = m.length === "short" ? 35 : 57.5;
+    const shelfW = m.length === "short" ? 74.655 : 122.6475;
+    
+    totModuleWidth += shelfW; // Summe der Modul-Breiten für Visualisierung
+    
+    if (idx === 0) {
+      // Erstes Modul: Regalbrett + 7cm (zwei Leisten)
+      totLen += shelfLen + 7;
+      totW += shelfW + 2 * railWidth;
+    } else {
+      // Jedes weitere Modul: Regalbrett + 3,5cm (eine Leiste)
+      totLen += shelfLen + 3.5;
+      totW += shelfW + railWidth;
+    }
   });
 
   let maxH = 0;
-  let maxT = '';
-  modules.forEach(m => {
+  let maxT = "";
+  modules.forEach((m) => {
     const h = getHeight(m.type);
     const pos = getPositions(m.type, h);
-    let top = m.type === 'K' ? 0 : pos[0];
-    pos.forEach(p => { if (p < top) top = p; });
+    let top = m.type === "K" ? 0 : pos[0];
+    pos.forEach((p) => {
+      if (p < top) top = p;
+    });
     const bh = h - top;
     if (bh > maxH) {
       maxH = bh;
@@ -126,151 +174,366 @@ export default function App() {
   });
 
   let realH = 0;
-  if (maxT === 'K') {
+  if (maxT === "K") {
     realH = 1800;
   } else if (maxT) {
     const n = parseInt(maxT.substring(1));
     realH = 45 + (n - 1) * 430 + 35;
   }
 
-  let sc = 1;
+  // ===== STRIKTE FIT-TO-VIEWPORT BERECHNUNG =====
+  let zoomScale = 1;
+  let contentWidth = 0;  // Gesamtbreite des Inhalts (Regal + Maßangaben)
+  let contentHeight = 0; // Gesamthöhe des Inhalts (Regal + Maßangaben)
+  
   if (modules.length > 0) {
-    let mh = 0;
-    modules.forEach(m => {
-      const h = getHeight(m.type);
-      if (h > mh) mh = h;
-    });
-    const sx = 800 / (totW + 100);
-    const sy = 400 / (mh + 150);
-    sc = sx < sy ? sx : sy;
-    if (sc > 1.5) sc = 1.5;
+    // 1. BOUNDING BOX DES REGALS BERECHNEN
+    // Breite: Gesamtbreite aller Module mit Leisten
+    const shelfWidth = totW;
+    
+    // Höhe: Maximale Höhe aller Module vom Boden bis zur obersten Leiste
+    let shelfHeight = maxH;
+    
+    // 2. MAßANGABEN-DIMENSIONEN UND INTERAKTIVE ELEMENTE
+    // Links: Höhenanzeige bei -140px + rotierter Text (~60px Breite) + Plus-Button bei -70px wenn vorhanden
+    const heightMarkerWidth = 170;   // Links: Optimiert für Höhenanzeige + rotierter Text (reduziert von 200px)
+    
+    // Rechts: Plus-Button bei -70px wenn pendingModule vorhanden
+    const rightMarkerWidth = pendingModule ? 80 : 15; // Extra Platz für rechten Plus-Button (optimiert)
+    
+    // Unten: Längenangabe + Text
+    const lengthMarkerHeight = 85;  // Unten: Optimiert (reduziert von 98px)
+    
+    // 3. GESAMTE BOUNDING BOX (Regal + Maßangaben + interaktive Elemente)
+    // Dies ist die komplette Fläche, die im Viewport sichtbar sein muss
+    contentWidth = shelfWidth + heightMarkerWidth + rightMarkerWidth;
+    contentHeight = shelfHeight + lengthMarkerHeight;
+    
+    // 4. VERFÜGBARER VIEWPORT (tatsächliche gemessene Größe)
+    const availableWidth = viewportSize.width;
+    const availableHeight = viewportSize.height;
+    
+    // 5. BERECHNE SKALIERUNGSFAKTOR
+    // Der Faktor muss so gewählt werden, dass die gesamte Bounding Box passt
+    const scaleX = availableWidth / contentWidth;
+    const scaleY = availableHeight / contentHeight;
+    
+    // Nimm den kleineren Wert (begrenzender Faktor)
+    let maxScale = Math.min(scaleX, scaleY);
+    
+    // 6. REDUZIERUNG FÜR OPTIMALE DARSTELLUNG
+    // Für eine ästhetische Darstellung mit ausreichend Puffer, aber maximaler Flächennutzung
+    const reductionFactor = 0.88; // 88% der maximal möglichen Größe (erhöht von 72% für bessere Flächennutzung)
+    zoomScale = maxScale * reductionFactor;
+    
+    // 7. ABSOLUTE GRENZEN
+    // Mindestens 0.1x (sehr große Konfigurationen)
+    // Maximal 1.3x (sehr kleine Konfigurationen mit einzelnem Modul)
+    zoomScale = Math.max(0.1, Math.min(zoomScale, 1.3));
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
-      <header style={{ backgroundColor: 'white', borderBottom: '1px solid #e2e8f0', padding: '16px 24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '32px', height: '32px', backgroundColor: '#0f172a', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>⚙</div>
-          <h1>Regalsystem Konfigurator</h1>
+    <div
+      style={{
+        minHeight: "100vh",
+        backgroundColor: "#f8fafc",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <header
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 20,
+          backgroundColor: "white",
+          borderBottom: "1px solid #e2e8f0",
+          padding: "16px 24px",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+          }}
+        >
+          <ImageWithFallback
+            src={logo}
+            alt="Logo"
+            style={{
+              height: "40px",
+              width: "auto",
+              objectFit: "contain",
+            }}
+          />
+          <h1 style={{ color: "#000000" }}>"Name" Konfigurator</h1>
         </div>
       </header>
-      
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
-          <div style={{ marginBottom: '24px' }}>
-            <h2 style={{ color: '#0f172a', marginBottom: '4px' }}>Ihre Konfiguration</h2>
-            <p style={{ color: '#64748b' }}>
-              {modules.length === 0 ? 'Wählen Sie Module aus der Bibliothek' : `${modules.length} Module`}
+
+      <div
+        style={{ display: "flex", flex: 1, position: "relative" }}
+      >
+        {/* Linker Bereich - Fixiert */}
+        <div
+          style={{
+            position: "fixed",
+            top: "64px",
+            left: 0,
+            width: "calc(100% - 384px)",
+            height: "calc(100vh - 64px)",
+            padding: "24px",
+            overflowY: "auto",
+            zIndex: 10,
+            backgroundColor: "#f8fafc",
+          }}
+        >
+          <div style={{ marginBottom: "24px" }}>
+            <h2
+              style={{ color: "#000000", marginBottom: "4px" }}
+            >
+              Ihre Konfiguration
+            </h2>
+            <p style={{ color: "#B3B4B3" }}>
+              {modules.length === 0
+                ? "Wählen Sie Module aus der Bibliothek"
+                : pendingModule
+                ? "Klicken Sie auf + links oder rechts, um das Modul hinzuzufügen"
+                : `${modules.length} Module`}
             </p>
           </div>
-          
-          <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '48px', minHeight: '500px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+
+          <div
+            ref={viewportRef}
+            style={{
+              backgroundColor: "white",
+              borderRadius: "8px",
+              padding: "48px",
+              minHeight: "600px",
+              height: "calc(100vh - 200px)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
             {modules.length === 0 ? (
-              <div style={{ textAlign: 'center', color: '#cbd5e1' }}>
-                <div style={{ fontSize: '48px', marginBottom: '16px' }}>📦</div>
+              <div
+                style={{
+                  textAlign: "center",
+                  color: "#cbd5e1",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "48px",
+                    marginBottom: "16px",
+                  }}
+                >
+                  📦
+                </div>
                 <p>Keine Module ausgewählt</p>
               </div>
             ) : (
-              <div style={{ transform: `scale(${sc})`, transformOrigin: 'center center' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 0 }}>
+              <div
+                style={{
+                  transform: `scale(${zoomScale})`,
+                  transformOrigin: "center center",
+                  transition: "transform 0.25s ease-in-out",
+                  position: "relative",
+                }}
+              >
+                {/* Plus-Button Links - nur wenn pendingModule vorhanden */}
+                {pendingModule && (
+                  <button
+                    onClick={() => {
+                      addModule(pendingModule.type, pendingModule.length, "left");
+                      setPendingModule(null);
+                    }}
+                    style={{
+                      position: "absolute",
+                      left: "-70px",
+                      bottom: `${maxH / 2 - 22}px`,
+                      width: "44px",
+                      height: "44px",
+                      backgroundColor: "#632126",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "50%",
+                      cursor: "pointer",
+                      boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                      zIndex: 30,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "24px",
+                      fontWeight: "bold",
+                      transition: "bottom 0.25s ease-in-out",
+                    }}
+                    title="Modul links hinzufügen"
+                  >
+                    +
+                  </button>
+                )}
+
+                {/* Plus-Button Rechts - nur wenn pendingModule vorhanden */}
+                {pendingModule && (
+                  <button
+                    onClick={() => {
+                      addModule(pendingModule.type, pendingModule.length, "right");
+                      setPendingModule(null);
+                    }}
+                    style={{
+                      position: "absolute",
+                      right: "-70px",
+                      bottom: `${maxH / 2 - 22}px`,
+                      width: "44px",
+                      height: "44px",
+                      backgroundColor: "#632126",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "50%",
+                      cursor: "pointer",
+                      boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                      zIndex: 30,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "24px",
+                      fontWeight: "bold",
+                      transition: "bottom 0.25s ease-in-out",
+                    }}
+                    title="Modul rechts hinzufügen"
+                  >
+                    +
+                  </button>
+                )}
+
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-end",
+                    gap: 0,
+                  }}
+                >
                   {modules.map((mod, idx) => {
-                    const w = mod.length === 'short' ? 80 : 128;
+                    const w = mod.length === "short" ? 74.655 : 122.6475;
                     const h = getHeight(mod.type);
                     const isLeft = idx === 0;
                     const pos = getPositions(mod.type, h);
                     const thick = 35 * 0.2133; // Brettstärke
                     const railWidth = 35 * 0.2133; // 35mm Leistenbreite
-                    
+
                     // Berechne Höhe für die linke Leiste (nur beim ersten Modul)
                     let leftRailHeight = h;
-                    
+
                     // Berechne Höhe für die rechte Leiste (verbindet aktuelles und nächstes Modul)
                     let rightRailHeight = h;
                     if (idx < modules.length - 1) {
-                      const nextH = getHeight(modules[idx + 1].type);
+                      const nextH = getHeight(
+                        modules[idx + 1].type,
+                      );
                       rightRailHeight = Math.max(h, nextH);
                     }
-                    
+
                     return (
-                      <div 
+                      <div
                         key={mod.id}
-                        style={{ position: 'relative', width: `${w}px`, height: `${h}px` }}
-                        onMouseEnter={() => setHoveredId(mod.id)}
+                        style={{
+                          position: "relative",
+                          width: `${w}px`,
+                          height: `${h}px`,
+                        }}
+                        onMouseEnter={() =>
+                          setHoveredId(mod.id)
+                        }
                         onMouseLeave={() => setHoveredId(null)}
                       >
                         {/* Linke Leiste nur beim ersten Modul */}
                         {isLeft && (
-                          <div style={{ 
-                            position: 'absolute', 
-                            left: 0, 
-                            bottom: 0, 
-                            height: `${leftRailHeight}px`, 
-                            width: `${railWidth}px`, 
-                            backgroundColor: '#0f172a' 
-                          }} />
+                          <div
+                            style={{
+                              position: "absolute",
+                              left: 0,
+                              bottom: 0,
+                              height: `${leftRailHeight}px`,
+                              width: `${railWidth}px`,
+                              backgroundColor: "#000000",
+                            }}
+                          />
                         )}
-                        
+
                         {/* Rechte Leiste bei allen Modulen */}
-                        <div style={{ 
-                          position: 'absolute', 
-                          right: 0, 
-                          bottom: 0, 
-                          height: `${rightRailHeight}px`, 
-                          width: `${railWidth}px`, 
-                          backgroundColor: '#0f172a' 
-                        }} />
-                        
+                        <div
+                          style={{
+                            position: "absolute",
+                            right: 0,
+                            bottom: 0,
+                            height: `${rightRailHeight}px`,
+                            width: `${railWidth}px`,
+                            backgroundColor: "#000000",
+                          }}
+                        />
+
                         {/* Regalbretter */}
                         {pos.map((p, i) => (
-                          <div 
+                          <div
                             key={i}
                             style={{
-                              position: 'absolute',
-                              left: isLeft ? `${railWidth}px` : '0px',
+                              position: "absolute",
+                              left: isLeft
+                                ? `${railWidth}px`
+                                : "0px",
                               right: `${railWidth}px`,
                               top: `${p}px`,
                               height: `${thick}px`,
-                              backgroundColor: '#a0522d',
-                              borderTop: '2px solid #8b4513',
-                              borderBottom: '2px solid #8b4513',
+                              backgroundColor: "#000000",
+                              borderTop: "2px solid #000000",
+                              borderBottom: "2px solid #000000",
                             }}
                           />
                         ))}
-                        
+
                         {/* Kleiderstange nur bei Modul K */}
-                        {mod.type === 'K' && (
-                          <div style={{
-                            position: 'absolute',
-                            left: isLeft ? `${railWidth + 4}px` : `${railWidth}px`,
-                            right: `${railWidth + 4}px`,
-                            top: `${135 * 0.2133}px`,
-                            height: '6px',
-                            backgroundColor: '#94a3b8',
-                            borderRadius: '99px',
-                          }} />
+                        {mod.type === "K" && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              left: isLeft
+                                ? `${railWidth + 4}px`
+                                : `${railWidth}px`,
+                              right: `${railWidth + 4}px`,
+                              top: `${135 * 0.2133}px`,
+                              height: "6px",
+                              backgroundColor: "#000000",
+                              borderRadius: "99px",
+                            }}
+                          />
                         )}
-                        
+
                         {/* Löschen-Button */}
                         {hoveredId === mod.id && (
                           <button
                             onClick={() => removeModule(mod.id)}
                             style={{
-                              position: 'absolute',
-                              top: '-12px',
-                              left: '50%',
-                              transform: 'translateX(-50%)',
-                              width: '28px',
-                              height: '28px',
-                              backgroundColor: '#ef4444',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '50%',
-                              cursor: 'pointer',
-                              boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                              position: "absolute",
+                              top: "-12px",
+                              left: "50%",
+                              transform: "translateX(-50%)",
+                              width: "28px",
+                              height: "28px",
+                              backgroundColor: "#632126",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "50%",
+                              cursor: "pointer",
+                              boxShadow:
+                                "0 4px 6px rgba(0,0,0,0.1)",
                               zIndex: 20,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
                             }}
                           >
                             ✕
@@ -280,101 +543,321 @@ export default function App() {
                     );
                   })}
                 </div>
-                
-                <div style={{ marginTop: '48px', position: 'relative', width: `${totW}px` }}>
-                  <div style={{ height: '2px', backgroundColor: '#64748b', position: 'relative' }}>
-                    <div style={{ position: 'absolute', left: 0, top: '-6px', width: '2px', height: '14px', backgroundColor: '#64748b' }} />
-                    <div style={{ position: 'absolute', right: 0, top: '-6px', width: '2px', height: '14px', backgroundColor: '#64748b' }} />
+
+                <div
+                  style={{
+                    marginTop: "48px",
+                    position: "relative",
+                    width: `${totW}px`,
+                  }}
+                >
+                  {/* Höhenanzeige - parallel zur linken Leiste, beginnt auf gleicher Höhe wie die Leiste vom Boden */}
+                  {maxH > 0 && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: "-140px",
+                        bottom: "48px",
+                        height: `${maxH}px`,
+                      }}
+                    >
+                      {/* Vertikale Linie parallel zur Leiste */}
+                      <div
+                        style={{
+                          position: "relative",
+                          width: "2px",
+                          height: "100%",
+                          backgroundColor: "#B3B4B3",
+                        }}
+                      >
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: 0,
+                            left: "-6px",
+                            width: "14px",
+                            height: "2px",
+                            backgroundColor: "#B3B4B3",
+                          }}
+                        />
+                        <div
+                          style={{
+                            position: "absolute",
+                            bottom: 0,
+                            left: "-6px",
+                            width: "14px",
+                            height: "2px",
+                            backgroundColor: "#B3B4B3",
+                          }}
+                        />
+                      </div>
+                      {/* Text um 90 Grad gegen Uhrzeigersinn gedreht, links neben der Linie mit 8px Abstand */}
+                      <div
+                        style={{
+                          color: "#B3B4B3",
+                          whiteSpace: "nowrap",
+                          transform: "rotate(-90deg)",
+                          transformOrigin: "center center",
+                          position: "absolute",
+                          right: "10px",
+                          top: "50%",
+                        }}
+                      >
+                        {(realH / 10).toFixed(1)} cm
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Längenangabe */}
+                  <div
+                    style={{
+                      width: `${totModuleWidth}px`,
+                      height: "2px",
+                      backgroundColor: "#B3B4B3",
+                      position: "relative",
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: 0,
+                        top: "-6px",
+                        width: "2px",
+                        height: "14px",
+                        backgroundColor: "#B3B4B3",
+                      }}
+                    />
+                    <div
+                      style={{
+                        position: "absolute",
+                        right: 0,
+                        top: "-6px",
+                        width: "2px",
+                        height: "14px",
+                        backgroundColor: "#B3B4B3",
+                      }}
+                    />
                   </div>
-                  <div style={{ position: 'absolute', top: '8px', left: '50%', transform: 'translateX(-50%)', color: '#64748b', whiteSpace: 'nowrap' }}>
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "8px",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      color: "#B3B4B3",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
                     {totLen} cm
                   </div>
                 </div>
-                
-                {maxH > 0 && (
-                  <div style={{ position: 'absolute', left: '-40px', bottom: 0, width: '2px', height: `${maxH}px`, backgroundColor: '#64748b' }}>
-                    <div style={{ position: 'absolute', top: 0, left: '-6px', width: '14px', height: '2px', backgroundColor: '#64748b' }} />
-                    <div style={{ position: 'absolute', bottom: 0, left: '-6px', width: '14px', height: '2px', backgroundColor: '#64748b' }} />
-                    <div style={{ position: 'absolute', top: '-24px', left: '50%', transform: 'translateX(-50%)', color: '#64748b', whiteSpace: 'nowrap' }}>
-                      {(realH / 10).toFixed(1)} cm
-                    </div>
-                  </div>
-                )}
               </div>
             )}
           </div>
         </div>
-        
-        <div style={{ width: '384px', borderLeft: '1px solid #e2e8f0', backgroundColor: 'white', overflowY: 'auto' }}>
-          <div style={{ padding: '24px', borderBottom: '1px solid #e2e8f0' }}>
-            <h2 style={{ marginBottom: '16px', color: '#0f172a' }}>Module Bibliothek</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+        {/* Rechter Bereich - Bibliothek */}
+        <div
+          style={{
+            marginLeft: "calc(100% - 384px)",
+            width: "384px",
+            borderLeft: "1px solid #e2e8f0",
+            backgroundColor: "white",
+            minHeight: "calc(100vh - 64px)",
+          }}
+        >
+          <div
+            style={{
+              padding: "24px",
+              borderBottom: "1px solid #e2e8f0",
+            }}
+          >
+            <h2
+              style={{ marginBottom: "16px", color: "#000000" }}
+            >
+              Module Bibliothek
+            </h2>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "12px",
+              }}
+            >
               {types.map((t) => {
                 const isExp = expandedType === t.id;
                 const moduleImg = getModuleImage(t.id);
-                
+
                 return (
                   <div key={t.id}>
                     <div
-                      onClick={() => setExpandedType(isExp ? '' : t.id)}
-                      style={{ padding: '16px', backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer' }}
+                      onClick={() =>
+                        setExpandedType(isExp ? "" : t.id)
+                      }
+                      style={{
+                        padding: "16px",
+                        backgroundColor: "white",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "8px",
+                        cursor: "pointer",
+                      }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ width: '80px', height: '80px', backgroundColor: '#f1f5f9', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px' }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "12px",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: "80px",
+                            height: "80px",
+                            backgroundColor: "#f1f5f9",
+                            borderRadius: "4px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "32px",
+                          }}
+                        >
                           {moduleImg ? (
-                            <ImageWithFallback src={moduleImg} alt={`${t.id} Modul`} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                            <ImageWithFallback
+                              src={moduleImg}
+                              alt={`${t.id} Modul`}
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "contain",
+                              }}
+                            />
                           ) : (
                             renderModulePreview(t.id)
                           )}
                         </div>
                         <div style={{ flex: 1 }}>
-                          <h3 style={{ margin: 0, color: '#0f172a' }}>{t.id}</h3>
-                          <p style={{ color: '#64748b', margin: '4px 0 0' }}>{t.name}</p>
-                          <p style={{ color: '#94a3b8', margin: '4px 0 0' }}>Höhe: {t.h}mm</p>
+                          <h3
+                            style={{
+                              margin: 0,
+                              color: "#000000",
+                            }}
+                          >
+                            {t.id}
+                          </h3>
+                          <p
+                            style={{
+                              color: "#B3B4B3",
+                              margin: "4px 0 0",
+                            }}
+                          >
+                            {t.name}
+                          </p>
+                          <p
+                            style={{
+                              color: "#B3B4B3",
+                              margin: "4px 0 0",
+                            }}
+                          >
+                            H: {t.h}cm; T: 40cm
+                          </p>
                         </div>
-                        <div style={{ color: '#cbd5e1' }}>{isExp ? '▲' : '▼'}</div>
                       </div>
                     </div>
-                    
+
                     {isExp && (
-                      <div style={{ marginTop: '8px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                        <p style={{ color: '#334155', marginBottom: '12px' }}>
-                          {modules.length === 0 ? 'Tiefe wählen:' : 'Tiefe und Position wählen:'}
+                      <div
+                        style={{
+                          marginTop: "8px",
+                          padding: "16px",
+                          backgroundColor: "#f8fafc",
+                          borderRadius: "8px",
+                          border: "1px solid #e2e8f0",
+                        }}
+                      >
+                        <p
+                          style={{
+                            color: "#334155",
+                            marginBottom: "12px",
+                          }}
+                        >
+                          {modules.length === 0
+                            ? "Länge wählen:"
+                            : "Länge wählen:"}
                         </p>
-                        
+
                         {modules.length === 0 ? (
                           <div>
-                            <button onClick={() => addModule(t.id, 'short', 'right')} style={{ width: '100%', padding: '10px 16px', marginBottom: '8px', border: '1px solid #e2e8f0', borderRadius: '6px', backgroundColor: 'white', cursor: 'pointer' }}>
-                              35cm (Standard)
+                            <button
+                              onClick={() =>
+                                addModule(
+                                  t.id,
+                                  "short",
+                                  "right",
+                                )
+                              }
+                              style={{
+                                width: "100%",
+                                padding: "10px 16px",
+                                marginBottom: "8px",
+                                border: "1px solid #e2e8f0",
+                                borderRadius: "6px",
+                                backgroundColor: "white",
+                                cursor: "pointer",
+                              }}
+                            >
+                              35cm
                             </button>
-                            <button onClick={() => addModule(t.id, 'long', 'right')} style={{ width: '100%', padding: '10px 16px', border: '1px solid #e2e8f0', borderRadius: '6px', backgroundColor: 'white', cursor: 'pointer' }}>
-                              57.5cm (Tief)
+                            <button
+                              onClick={() =>
+                                addModule(t.id, "long", "right")
+                              }
+                              style={{
+                                width: "100%",
+                                padding: "10px 16px",
+                                border: "1px solid #e2e8f0",
+                                borderRadius: "6px",
+                                backgroundColor: "white",
+                                cursor: "pointer",
+                              }}
+                            >
+                              57.5cm
                             </button>
                           </div>
                         ) : (
                           <div>
-                            <div style={{ marginBottom: '12px' }}>
-                              <p style={{ color: '#64748b', marginBottom: '8px' }}>35cm (Standard)</p>
-                              <div style={{ display: 'flex', gap: '8px' }}>
-                                <button onClick={() => addModule(t.id, 'short', 'left')} style={{ flex: 1, padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '6px', backgroundColor: 'white', cursor: 'pointer' }}>
-                                  ← Links
-                                </button>
-                                <button onClick={() => addModule(t.id, 'short', 'right')} style={{ flex: 1, padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '6px', backgroundColor: 'white', cursor: 'pointer' }}>
-                                  Rechts →
-                                </button>
-                              </div>
-                            </div>
-                            <div>
-                              <p style={{ color: '#64748b', marginBottom: '8px' }}>57.5cm (Tief)</p>
-                              <div style={{ display: 'flex', gap: '8px' }}>
-                                <button onClick={() => addModule(t.id, 'long', 'left')} style={{ flex: 1, padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '6px', backgroundColor: 'white', cursor: 'pointer' }}>
-                                  ← Links
-                                </button>
-                                <button onClick={() => addModule(t.id, 'long', 'right')} style={{ flex: 1, padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '6px', backgroundColor: 'white', cursor: 'pointer' }}>
-                                  Rechts →
-                                </button>
-                              </div>
-                            </div>
+                            <button
+                              onClick={() => {
+                                setPendingModule({ type: t.id, length: "short" });
+                                setExpandedType("");
+                              }}
+                              style={{
+                                width: "100%",
+                                padding: "10px 16px",
+                                marginBottom: "8px",
+                                border: pendingModule?.type === t.id && pendingModule?.length === "short" ? "2px solid #10b981" : "1px solid #e2e8f0",
+                                borderRadius: "6px",
+                                backgroundColor: pendingModule?.type === t.id && pendingModule?.length === "short" ? "#ecfdf5" : "white",
+                                cursor: "pointer",
+                              }}
+                            >
+                              35cm
+                            </button>
+                            <button
+                              onClick={() => {
+                                setPendingModule({ type: t.id, length: "long" });
+                                setExpandedType("");
+                              }}
+                              style={{
+                                width: "100%",
+                                padding: "10px 16px",
+                                border: pendingModule?.type === t.id && pendingModule?.length === "long" ? "2px solid #10b981" : "1px solid #e2e8f0",
+                                borderRadius: "6px",
+                                backgroundColor: pendingModule?.type === t.id && pendingModule?.length === "long" ? "#ecfdf5" : "white",
+                                cursor: "pointer",
+                              }}
+                            >
+                              57.5cm
+                            </button>
                           </div>
                         )}
                       </div>
@@ -384,24 +867,173 @@ export default function App() {
               })}
             </div>
           </div>
-          
+
           {modules.length > 0 && (
-            <div style={{ padding: '24px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-                <h2 style={{ margin: 0, color: '#0f172a' }}>Übersicht</h2>
-                <button onClick={() => setModules([])} style={{ padding: '4px 12px', color: '#0f172a', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', borderRadius: '4px' }}>
+            <div style={{ padding: "24px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: "16px",
+                }}
+              >
+                <h2 style={{ margin: 0, color: "#000000" }}>
+                  Übersicht
+                </h2>
+                <button
+                  onClick={() => setModules([])}
+                  style={{
+                    padding: "4px 12px",
+                    color: "#000000",
+                    border: "none",
+                    backgroundColor: "transparent",
+                    cursor: "pointer",
+                    borderRadius: "4px",
+                  }}
+                >
                   Leeren
                 </button>
               </div>
-              <div style={{ padding: '16px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                  <span style={{ color: '#64748b' }}>Anzahl Module:</span>
-                  <span style={{ color: '#0f172a' }}>{modules.length}</span>
+              <div
+                style={{
+                  padding: "16px",
+                  backgroundColor: "#f8fafc",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "8px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginBottom: "12px",
+                  }}
+                >
+                  <span style={{ color: "#000000" }}>
+                    Anzahl Module:
+                  </span>
+                  <span style={{ color: "#0f172a" }}>
+                    {modules.length}
+                  </span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#64748b' }}>Gesamtlänge:</span>
-                  <span style={{ color: '#0f172a' }}>{totLen}cm</span>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <span style={{ color: "#000000" }}>
+                    Gesamtlänge:
+                  </span>
+                  <span style={{ color: "#0f172a" }}>
+                    {totLen}cm
+                  </span>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {modules.length > 0 && (
+            <div style={{ padding: "24px", borderTop: "1px solid #e2e8f0" }}>
+              <h2 style={{ marginBottom: "16px", color: "#000000" }}>
+                Anfrage senden
+              </h2>
+              <div
+                style={{
+                  padding: "16px",
+                  backgroundColor: "#f8fafc",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "8px",
+                }}
+              >
+                <p style={{ color: "#64748b", marginBottom: "16px" }}>
+                  Schließen Sie Ihre Konfiguration ab und senden Sie uns eine Anfrage.
+                </p>
+                
+                <div style={{ marginBottom: "12px" }}>
+                  <label style={{ display: "block", color: "#334155", marginBottom: "4px" }}>
+                    Name
+                  </label>
+                  <input
+                    type="text"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    placeholder="Ihr Name"
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "6px",
+                      backgroundColor: "white",
+                      color: "#0f172a",
+                    }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: "12px" }}>
+                  <label style={{ display: "block", color: "#334155", marginBottom: "4px" }}>
+                    E-Mail
+                  </label>
+                  <input
+                    type="email"
+                    value={customerEmail}
+                    onChange={(e) => setCustomerEmail(e.target.value)}
+                    placeholder="ihre.email@beispiel.de"
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "6px",
+                      backgroundColor: "white",
+                      color: "#0f172a",
+                    }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: "16px" }}>
+                  <label style={{ display: "block", color: "#334155", marginBottom: "4px" }}>
+                    Nachricht (optional)
+                  </label>
+                  <textarea
+                    value={customerMessage}
+                    onChange={(e) => setCustomerMessage(e.target.value)}
+                    placeholder="Anmerkung"
+                    rows={3}
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "6px",
+                      backgroundColor: "white",
+                      color: "#0f172a",
+                      resize: "vertical",
+                    }}
+                  />
+                </div>
+
+                <button
+                  onClick={() => {
+                    const moduleList = modules.map((m, idx) => 
+                      `${idx + 1}. ${m.type} - ${m.length === 'short' ? '35cm' : '57.5cm'}`
+                    ).join('%0D%0A');
+                    
+                    const emailBody = `Hallo,%0D%0A%0D%0AIch möchte folgende Regalsystem-Konfiguration anfragen:%0D%0A%0D%0A${moduleList}%0D%0A%0D%0AAnzahl Module: ${modules.length}%0D%0AGesamtlänge: ${totLen}cm%0D%0AHöhe: ${(realH / 10).toFixed(1)}cm%0D%0A%0D%0AKontaktdaten:%0D%0AName: ${customerName}%0D%0AE-Mail: ${customerEmail}%0D%0A%0D%0ANachricht:%0D%0A${customerMessage}%0D%0A%0D%0AMit freundlichen Grüßen`;
+                    
+                    window.location.href = `mailto:sophie@lerchl.one?subject=Regalsystem Anfrage&body=${emailBody}`;
+                  }}
+                  style={{
+                    width: "100%",
+                    padding: "12px 16px",
+                    backgroundColor: "#0f172a",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Anfrage per E-Mail senden
+                </button>
               </div>
             </div>
           )}
