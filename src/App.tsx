@@ -14,6 +14,7 @@ export default function App() {
   const [customerName, setCustomerName] = React.useState("");
   const [customerEmail, setCustomerEmail] = React.useState("");
   const [customerMessage, setCustomerMessage] = React.useState("");
+  const [pendingModule, setPendingModule] = React.useState(null); // {type, length}
   
   // Ref für den Viewport Container
   const viewportRef = React.useRef(null);
@@ -127,9 +128,9 @@ export default function App() {
 
   const types = [
     { id: "T2", name: "2 Regalflächen", h: 51 },
-    { id: "T3", name: "3 Regalbretter", h: 94 },
-    { id: "T4", name: "4 Regalbretter", h: 137 },
-    { id: "T5", name: "5 Regalbretter", h: 180 },
+    { id: "T3", name: "3 Regalflächen", h: 94 },
+    { id: "T4", name: "4 Regalflächen", h: 137 },
+    { id: "T5", name: "5 Regalflächen", h: 180 },
     { id: "K", name: "Mit Kleiderstange", h: 180 },
   ];
 
@@ -193,15 +194,24 @@ export default function App() {
     // Höhe: Maximale Höhe aller Module vom Boden bis zur obersten Leiste
     let shelfHeight = maxH;
     
-    // 2. MAßANGABEN-DIMENSIONEN
-    // Die Maßangaben werden AUSSERHALB des Regals angezeigt und müssen berücksichtigt werden
-    const heightMarkerWidth = 88;   // Links: 48px Abstand + ~40px Text
-    const lengthMarkerHeight = 98;  // Unten: 48px Abstand + ~50px Text
+    // 2. MAßANGABEN-DIMENSIONEN UND INTERAKTIVE ELEMENTE
+    // Links: Höhenanzeige bei -140px + rotierter Text (~80px Breite bei langen Texten)
+    // WICHTIG: Muss groß genug sein, um die Höhenanzeige VOLLSTÄNDIG einzuschließen
+    const heightMarkerWidth = 210;   // Links: 140px Position + 70px für rotierten Text und Puffer
     
-    // 3. GESAMTE BOUNDING BOX (Regal + Maßangaben)
+    // Rechts: Plus-Button bei -70px wenn pendingModule vorhanden
+    const rightMarkerWidth = pendingModule ? 80 : 15; // Extra Platz für rechten Plus-Button
+    
+    // Unten: Längenangabe + Text
+    const lengthMarkerHeight = 80;  // Unten: 48px Abstand + ~32px Text
+    
+    // Oben: Höhenanzeige geht nach oben - zusätzlicher Puffer
+    const topMarkerHeight = 10; // Kleiner Puffer oben
+    
+    // 3. GESAMTE BOUNDING BOX (Regal + Maßangaben + interaktive Elemente)
     // Dies ist die komplette Fläche, die im Viewport sichtbar sein muss
-    contentWidth = shelfWidth + heightMarkerWidth;
-    contentHeight = shelfHeight + lengthMarkerHeight;
+    contentWidth = shelfWidth + heightMarkerWidth + rightMarkerWidth;
+    contentHeight = shelfHeight + lengthMarkerHeight + topMarkerHeight;
     
     // 4. VERFÜGBARER VIEWPORT (tatsächliche gemessene Größe)
     const availableWidth = viewportSize.width;
@@ -215,15 +225,15 @@ export default function App() {
     // Nimm den kleineren Wert (begrenzender Faktor)
     let maxScale = Math.min(scaleX, scaleY);
     
-    // 6. REDUZIERUNG AUF 75-80% DER MAXIMALEN GRÖSSE
-    // Für eine ästhetische, nicht gequetschte Darstellung
-    const reductionFactor = 0.78; // 78% der maximal möglichen Größe
+    // 6. REDUZIERUNG FÜR SICHERE DARSTELLUNG
+    // Garantiert, dass ALLE Elemente inklusive Höhenanzeige vollständig sichtbar sind
+    const reductionFactor = 0.85; // 85% der maximal möglichen Größe (reduziert von 92% für absolute Sicherheit)
     zoomScale = maxScale * reductionFactor;
     
     // 7. ABSOLUTE GRENZEN
-    // Mindestens 0.1x (sehr große Konfigurationen)
-    // Maximal 1.5x (sehr kleine Konfigurationen mit einzelnem Modul)
-    zoomScale = Math.max(0.1, Math.min(zoomScale, 1.5));
+    // Mindestens 0.2x (sehr große Konfigurationen) - erhöht für bessere Lesbarkeit
+    // Maximal 1.3x (sehr kleine Konfigurationen mit einzelnem Modul)
+    zoomScale = Math.max(0.2, Math.min(zoomScale, 1.3));
   }
 
   return (
@@ -237,8 +247,10 @@ export default function App() {
     >
       <header
         style={{
-          position: "sticky",
+          position: "fixed",
           top: 0,
+          left: 0,
+          right: 0,
           zIndex: 20,
           backgroundColor: "white",
           borderBottom: "1px solid #e2e8f0",
@@ -261,12 +273,12 @@ export default function App() {
               objectFit: "contain",
             }}
           />
-          <h1 style={{ color: "#000000" }}>Regalsystem Konfigurator</h1>
+          <h1 style={{ color: "#000000" }}>"Name" Konfigurator</h1>
         </div>
       </header>
 
       <div
-        style={{ display: "flex", flex: 1, position: "relative" }}
+        style={{ display: "flex", flex: 1, position: "relative", marginTop: "72px" }}
       >
         {/* Linker Bereich - Fixiert */}
         <div
@@ -288,9 +300,11 @@ export default function App() {
             >
               Ihre Konfiguration
             </h2>
-            <p style={{ color: "#64748b" }}>
+            <p style={{ color: "#B3B4B3" }}>
               {modules.length === 0
                 ? "Wählen Sie Module aus der Bibliothek"
+                : pendingModule
+                ? "Klicken Sie auf + links oder rechts, um das Modul hinzuzufügen"
                 : `${modules.length} Module`}
             </p>
           </div>
@@ -333,8 +347,75 @@ export default function App() {
                   transform: `scale(${zoomScale})`,
                   transformOrigin: "center center",
                   transition: "transform 0.25s ease-in-out",
+                  position: "relative",
                 }}
               >
+                {/* Plus-Button Links - nur wenn pendingModule vorhanden */}
+                {pendingModule && (
+                  <button
+                    onClick={() => {
+                      addModule(pendingModule.type, pendingModule.length, "left");
+                      setPendingModule(null);
+                    }}
+                    style={{
+                      position: "absolute",
+                      left: "-70px",
+                      bottom: `${maxH / 2 - 22}px`,
+                      width: "44px",
+                      height: "44px",
+                      backgroundColor: "#632126",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "50%",
+                      cursor: "pointer",
+                      boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                      zIndex: 30,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "24px",
+                      fontWeight: "bold",
+                      transition: "bottom 0.25s ease-in-out",
+                    }}
+                    title="Modul links hinzufügen"
+                  >
+                    +
+                  </button>
+                )}
+
+                {/* Plus-Button Rechts - nur wenn pendingModule vorhanden */}
+                {pendingModule && (
+                  <button
+                    onClick={() => {
+                      addModule(pendingModule.type, pendingModule.length, "right");
+                      setPendingModule(null);
+                    }}
+                    style={{
+                      position: "absolute",
+                      right: "-70px",
+                      bottom: `${maxH / 2 - 22}px`,
+                      width: "44px",
+                      height: "44px",
+                      backgroundColor: "#632126",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "50%",
+                      cursor: "pointer",
+                      boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                      zIndex: 30,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "24px",
+                      fontWeight: "bold",
+                      transition: "bottom 0.25s ease-in-out",
+                    }}
+                    title="Modul rechts hinzufügen"
+                  >
+                    +
+                  </button>
+                )}
+
                 <div
                   style={{
                     display: "flex",
@@ -481,7 +562,7 @@ export default function App() {
                     <div
                       style={{
                         position: "absolute",
-                        left: "-48px",
+                        left: "-140px",
                         bottom: "48px",
                         height: `${maxH}px`,
                       }}
@@ -492,7 +573,7 @@ export default function App() {
                           position: "relative",
                           width: "2px",
                           height: "100%",
-                          backgroundColor: "#64748b",
+                          backgroundColor: "#B3B4B3",
                         }}
                       >
                         <div
@@ -502,7 +583,7 @@ export default function App() {
                             left: "-6px",
                             width: "14px",
                             height: "2px",
-                            backgroundColor: "#64748b",
+                            backgroundColor: "#B3B4B3",
                           }}
                         />
                         <div
@@ -512,14 +593,14 @@ export default function App() {
                             left: "-6px",
                             width: "14px",
                             height: "2px",
-                            backgroundColor: "#64748b",
+                            backgroundColor: "#B3B4B3",
                           }}
                         />
                       </div>
                       {/* Text um 90 Grad gegen Uhrzeigersinn gedreht, links neben der Linie mit 8px Abstand */}
                       <div
                         style={{
-                          color: "#64748b",
+                          color: "#B3B4B3",
                           whiteSpace: "nowrap",
                           transform: "rotate(-90deg)",
                           transformOrigin: "center center",
@@ -538,7 +619,7 @@ export default function App() {
                     style={{
                       width: `${totModuleWidth}px`,
                       height: "2px",
-                      backgroundColor: "#64748b",
+                      backgroundColor: "#B3B4B3",
                       position: "relative",
                     }}
                   >
@@ -549,7 +630,7 @@ export default function App() {
                         top: "-6px",
                         width: "2px",
                         height: "14px",
-                        backgroundColor: "#64748b",
+                        backgroundColor: "#B3B4B3",
                       }}
                     />
                     <div
@@ -559,7 +640,7 @@ export default function App() {
                         top: "-6px",
                         width: "2px",
                         height: "14px",
-                        backgroundColor: "#64748b",
+                        backgroundColor: "#B3B4B3",
                       }}
                     />
                   </div>
@@ -569,7 +650,7 @@ export default function App() {
                       top: "8px",
                       left: "50%",
                       transform: "translateX(-50%)",
-                      color: "#64748b",
+                      color: "#B3B4B3",
                       whiteSpace: "nowrap",
                     }}
                   >
@@ -671,7 +752,7 @@ export default function App() {
                           </h3>
                           <p
                             style={{
-                              color: "#64748b",
+                              color: "#B3B4B3",
                               margin: "4px 0 0",
                             }}
                           >
@@ -679,7 +760,7 @@ export default function App() {
                           </p>
                           <p
                             style={{
-                              color: "#94a3b8",
+                              color: "#B3B4B3",
                               margin: "4px 0 0",
                             }}
                           >
@@ -707,7 +788,7 @@ export default function App() {
                         >
                           {modules.length === 0
                             ? "Länge wählen:"
-                            : "Länge und Position wählen:"}
+                            : "Länge wählen:"}
                         </p>
 
                         {modules.length === 0 ? (
@@ -750,118 +831,39 @@ export default function App() {
                           </div>
                         ) : (
                           <div>
-                            <div
-                              style={{ marginBottom: "12px" }}
+                            <button
+                              onClick={() => {
+                                setPendingModule({ type: t.id, length: "short" });
+                                setExpandedType("");
+                              }}
+                              style={{
+                                width: "100%",
+                                padding: "10px 16px",
+                                marginBottom: "8px",
+                                border: pendingModule?.type === t.id && pendingModule?.length === "short" ? "2px solid #10b981" : "1px solid #e2e8f0",
+                                borderRadius: "6px",
+                                backgroundColor: pendingModule?.type === t.id && pendingModule?.length === "short" ? "#ecfdf5" : "white",
+                                cursor: "pointer",
+                              }}
                             >
-                              <p
-                                style={{
-                                  color: "#64748b",
-                                  marginBottom: "8px",
-                                }}
-                              >
-                                35cm
-                              </p>
-                              <div
-                                style={{
-                                  display: "flex",
-                                  gap: "8px",
-                                }}
-                              >
-                                <button
-                                  onClick={() =>
-                                    addModule(
-                                      t.id,
-                                      "short",
-                                      "left",
-                                    )
-                                  }
-                                  style={{
-                                    flex: 1,
-                                    padding: "8px 12px",
-                                    border: "1px solid #e2e8f0",
-                                    borderRadius: "6px",
-                                    backgroundColor: "white",
-                                    cursor: "pointer",
-                                  }}
-                                >
-                                  ← Links
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    addModule(
-                                      t.id,
-                                      "short",
-                                      "right",
-                                    )
-                                  }
-                                  style={{
-                                    flex: 1,
-                                    padding: "8px 12px",
-                                    border: "1px solid #e2e8f0",
-                                    borderRadius: "6px",
-                                    backgroundColor: "white",
-                                    cursor: "pointer",
-                                  }}
-                                >
-                                  Rechts →
-                                </button>
-                              </div>
-                            </div>
-                            <div>
-                              <p
-                                style={{
-                                  color: "#64748b",
-                                  marginBottom: "8px",
-                                }}
-                              >
-                                57.5cm
-                              </p>
-                              <div
-                                style={{
-                                  display: "flex",
-                                  gap: "8px",
-                                }}
-                              >
-                                <button
-                                  onClick={() =>
-                                    addModule(
-                                      t.id,
-                                      "long",
-                                      "left",
-                                    )
-                                  }
-                                  style={{
-                                    flex: 1,
-                                    padding: "8px 12px",
-                                    border: "1px solid #e2e8f0",
-                                    borderRadius: "6px",
-                                    backgroundColor: "white",
-                                    cursor: "pointer",
-                                  }}
-                                >
-                                  ← Links
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    addModule(
-                                      t.id,
-                                      "long",
-                                      "right",
-                                    )
-                                  }
-                                  style={{
-                                    flex: 1,
-                                    padding: "8px 12px",
-                                    border: "1px solid #e2e8f0",
-                                    borderRadius: "6px",
-                                    backgroundColor: "white",
-                                    cursor: "pointer",
-                                  }}
-                                >
-                                  Rechts →
-                                </button>
-                              </div>
-                            </div>
+                              35cm
+                            </button>
+                            <button
+                              onClick={() => {
+                                setPendingModule({ type: t.id, length: "long" });
+                                setExpandedType("");
+                              }}
+                              style={{
+                                width: "100%",
+                                padding: "10px 16px",
+                                border: pendingModule?.type === t.id && pendingModule?.length === "long" ? "2px solid #10b981" : "1px solid #e2e8f0",
+                                borderRadius: "6px",
+                                backgroundColor: pendingModule?.type === t.id && pendingModule?.length === "long" ? "#ecfdf5" : "white",
+                                cursor: "pointer",
+                              }}
+                            >
+                              57.5cm
+                            </button>
                           </div>
                         )}
                       </div>
@@ -914,7 +916,7 @@ export default function App() {
                     marginBottom: "12px",
                   }}
                 >
-                  <span style={{ color: "#64748b" }}>
+                  <span style={{ color: "#000000" }}>
                     Anzahl Module:
                   </span>
                   <span style={{ color: "#0f172a" }}>
@@ -927,7 +929,7 @@ export default function App() {
                     justifyContent: "space-between",
                   }}
                 >
-                  <span style={{ color: "#64748b" }}>
+                  <span style={{ color: "#000000" }}>
                     Gesamtlänge:
                   </span>
                   <span style={{ color: "#0f172a" }}>
@@ -1002,7 +1004,7 @@ export default function App() {
                   <textarea
                     value={customerMessage}
                     onChange={(e) => setCustomerMessage(e.target.value)}
-                    placeholder="Ihre Nachricht oder Fragen..."
+                    placeholder="Anmerkung"
                     rows={3}
                     style={{
                       width: "100%",
@@ -1036,7 +1038,7 @@ export default function App() {
                     cursor: "pointer",
                   }}
                 >
-                  📧 Anfrage per E-Mail senden
+                  Anfrage per E-Mail senden
                 </button>
               </div>
             </div>
