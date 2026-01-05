@@ -127,11 +127,11 @@ export default function App() {
   };
 
   const types = [
-    { id: "T2", name: "2 Regalflächen", h: 51 },
-    { id: "T3", name: "3 Regalflächen", h: 94 },
-    { id: "T4", name: "4 Regalflächen", h: 137 },
-    { id: "T5", name: "5 Regalflächen", h: 180 },
-    { id: "K", name: "Mit Kleiderstange", h: 180 },
+    { id: "T2", name: "2 Shelves", h: 51 },
+    { id: "T3", name: "3 Shelves", h: 94 },
+    { id: "T4", name: "4 Shelves", h: 137 },
+    { id: "T5", name: "5 Shelves", h: 180 },
+    { id: "K", name: "With Clothes Rail", h: 180 },
   ];
 
   const railWidth = 35 * 0.2133; // 35mm Leistenbreite in Pixel
@@ -273,7 +273,7 @@ export default function App() {
               objectFit: "contain",
             }}
           />
-          <h1 style={{ color: "#000000" }}>"Name" Konfigurator</h1>
+          <h1 style={{ color: "#000000" }}>Configurator</h1>
         </div>
       </header>
 
@@ -298,14 +298,14 @@ export default function App() {
             <h2
               style={{ color: "#000000", marginBottom: "4px" }}
             >
-              Ihre Konfiguration
+              Your Configuration
             </h2>
             <p style={{ color: "#B3B4B3" }}>
               {modules.length === 0
-                ? "Wählen Sie Module aus der Bibliothek"
+                ? "Select modules from the library"
                 : pendingModule
-                ? "Klicken Sie auf + links oder rechts, um das Modul hinzuzufügen"
-                : `${modules.length} Module`}
+                ? "Click + left or right to add the module"
+                : `${modules.length} modules`}
             </p>
           </div>
 
@@ -339,322 +339,334 @@ export default function App() {
                 >
                   📦
                 </div>
-                <p>Keine Module ausgewählt</p>
+                <p>No modules selected</p>
               </div>
             ) : (
               <div
                 style={{
-                  transform: `scale(${zoomScale})`,
-                  transformOrigin: "center center",
-                  transition: "transform 0.25s ease-in-out",
-                  position: "relative",
+                  width: "100%",
+                  height: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  paddingLeft: "140px", // Platz für Höhenanzeige links
+                  paddingRight: "40px",  // Etwas Platz rechts
                 }}
               >
-                {/* Plus-Button Links - nur wenn pendingModule vorhanden */}
-                {pendingModule && (
-                  <button
-                    onClick={() => {
-                      addModule(pendingModule.type, pendingModule.length, "left");
-                      setPendingModule(null);
-                    }}
-                    style={{
-                      position: "absolute",
-                      left: "-70px",
-                      bottom: `${maxH / 2 - 22}px`,
-                      width: "44px",
-                      height: "44px",
-                      backgroundColor: "#632126",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "50%",
-                      cursor: "pointer",
-                      boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-                      zIndex: 30,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "24px",
-                      fontWeight: "bold",
-                      transition: "bottom 0.25s ease-in-out",
-                    }}
-                    title="Modul links hinzufügen"
-                  >
-                    +
-                  </button>
-                )}
-
-                {/* Plus-Button Rechts - nur wenn pendingModule vorhanden */}
-                {pendingModule && (
-                  <button
-                    onClick={() => {
-                      addModule(pendingModule.type, pendingModule.length, "right");
-                      setPendingModule(null);
-                    }}
-                    style={{
-                      position: "absolute",
-                      right: "-70px",
-                      bottom: `${maxH / 2 - 22}px`,
-                      width: "44px",
-                      height: "44px",
-                      backgroundColor: "#632126",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "50%",
-                      cursor: "pointer",
-                      boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-                      zIndex: 30,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "24px",
-                      fontWeight: "bold",
-                      transition: "bottom 0.25s ease-in-out",
-                    }}
-                    title="Modul rechts hinzufügen"
-                  >
-                    +
-                  </button>
-                )}
-
                 <div
                   style={{
-                    display: "flex",
-                    alignItems: "flex-end",
-                    gap: 0,
+                    transform: `scale(${zoomScale})`,
+                    transformOrigin: "center center",
+                    transition: "transform 0.25s ease-in-out",
+                    position: "relative",
                   }}
                 >
-                  {modules.map((mod, idx) => {
-                    const w = mod.length === "short" ? 74.655 : 122.6475;
-                    const h = getHeight(mod.type);
-                    const isLeft = idx === 0;
-                    const pos = getPositions(mod.type, h);
-                    const thick = 35 * 0.2133; // Brettstärke
-                    const railWidth = 35 * 0.2133; // 35mm Leistenbreite
+                  {/* Plus-Button Links - nur wenn pendingModule vorhanden */}
+                  {pendingModule && (
+                    <button
+                      onClick={() => {
+                        addModule(pendingModule.type, pendingModule.length, "left");
+                        setPendingModule(null);
+                      }}
+                      style={{
+                        position: "absolute",
+                        left: "-70px",
+                        bottom: `${maxH / 2 - 22}px`,
+                        width: "44px",
+                        height: "44px",
+                        backgroundColor: "#632126",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "50%",
+                        cursor: "pointer",
+                        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                        zIndex: 30,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "24px",
+                        fontWeight: "bold",
+                        transition: "bottom 0.25s ease-in-out",
+                      }}
+                      title="Modul links hinzufügen"
+                    >
+                      +
+                    </button>
+                  )}
 
-                    // Berechne Höhe für die linke Leiste (nur beim ersten Modul)
-                    let leftRailHeight = h;
+                  {/* Plus-Button Rechts - nur wenn pendingModule vorhanden */}
+                  {pendingModule && (
+                    <button
+                      onClick={() => {
+                        addModule(pendingModule.type, pendingModule.length, "right");
+                        setPendingModule(null);
+                      }}
+                      style={{
+                        position: "absolute",
+                        right: "-70px",
+                        bottom: `${maxH / 2 - 22}px`,
+                        width: "44px",
+                        height: "44px",
+                        backgroundColor: "#632126",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "50%",
+                        cursor: "pointer",
+                        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                        zIndex: 30,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "24px",
+                        fontWeight: "bold",
+                        transition: "bottom 0.25s ease-in-out",
+                      }}
+                      title="Modul rechts hinzufügen"
+                    >
+                      +
+                    </button>
+                  )}
 
-                    // Berechne Höhe für die rechte Leiste (verbindet aktuelles und nächstes Modul)
-                    let rightRailHeight = h;
-                    if (idx < modules.length - 1) {
-                      const nextH = getHeight(
-                        modules[idx + 1].type,
-                      );
-                      rightRailHeight = Math.max(h, nextH);
-                    }
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-end",
+                      gap: 0,
+                    }}
+                  >
+                    {modules.map((mod, idx) => {
+                      const w = mod.length === "short" ? 74.655 : 122.6475;
+                      const h = getHeight(mod.type);
+                      const isLeft = idx === 0;
+                      const pos = getPositions(mod.type, h);
+                      const thick = 35 * 0.2133; // Brettstärke
+                      const railWidth = 35 * 0.2133; // 35mm Leistenbreite
 
-                    return (
-                      <div
-                        key={mod.id}
-                        style={{
-                          position: "relative",
-                          width: `${w}px`,
-                          height: `${h}px`,
-                        }}
-                        onMouseEnter={() =>
-                          setHoveredId(mod.id)
-                        }
-                        onMouseLeave={() => setHoveredId(null)}
-                      >
-                        {/* Linke Leiste nur beim ersten Modul */}
-                        {isLeft && (
+                      // Berechne Höhe für die linke Leiste (nur beim ersten Modul)
+                      let leftRailHeight = h;
+
+                      // Berechne Höhe für die rechte Leiste (verbindet aktuelles und nächstes Modul)
+                      let rightRailHeight = h;
+                      if (idx < modules.length - 1) {
+                        const nextH = getHeight(
+                          modules[idx + 1].type,
+                        );
+                        rightRailHeight = Math.max(h, nextH);
+                      }
+
+                      return (
+                        <div
+                          key={mod.id}
+                          style={{
+                            position: "relative",
+                            width: `${w}px`,
+                            height: `${h}px`,
+                          }}
+                          onMouseEnter={() =>
+                            setHoveredId(mod.id)
+                          }
+                          onMouseLeave={() => setHoveredId(null)}
+                        >
+                          {/* Linke Leiste nur beim ersten Modul */}
+                          {isLeft && (
+                            <div
+                              style={{
+                                position: "absolute",
+                                left: 0,
+                                bottom: 0,
+                                height: `${leftRailHeight}px`,
+                                width: `${railWidth}px`,
+                                backgroundColor: "#000000",
+                              }}
+                            />
+                          )}
+
+                          {/* Rechte Leiste bei allen Modulen */}
                           <div
                             style={{
                               position: "absolute",
-                              left: 0,
+                              right: 0,
                               bottom: 0,
-                              height: `${leftRailHeight}px`,
+                              height: `${rightRailHeight}px`,
                               width: `${railWidth}px`,
                               backgroundColor: "#000000",
                             }}
                           />
-                        )}
 
-                        {/* Rechte Leiste bei allen Modulen */}
+                          {/* Regalbretter */}
+                          {pos.map((p, i) => (
+                            <div
+                              key={i}
+                              style={{
+                                position: "absolute",
+                                left: isLeft
+                                  ? `${railWidth}px`
+                                  : "0px",
+                                right: `${railWidth}px`,
+                                top: `${p}px`,
+                                height: `${thick}px`,
+                                backgroundColor: "#000000",
+                                borderTop: "2px solid #000000",
+                                borderBottom: "2px solid #000000",
+                              }}
+                            />
+                          ))}
+
+                          {/* Kleiderstange nur bei Modul K */}
+                          {mod.type === "K" && (
+                            <div
+                              style={{
+                                position: "absolute",
+                                left: isLeft
+                                  ? `${railWidth + 4}px`
+                                  : `${railWidth}px`,
+                                right: `${railWidth + 4}px`,
+                                top: `${135 * 0.2133}px`,
+                                height: "6px",
+                                backgroundColor: "#000000",
+                                borderRadius: "99px",
+                              }}
+                            />
+                          )}
+
+                          {/* Löschen-Button */}
+                          {hoveredId === mod.id && (
+                            <button
+                              onClick={() => removeModule(mod.id)}
+                              style={{
+                                position: "absolute",
+                                top: "-12px",
+                                left: "50%",
+                                transform: "translateX(-50%)",
+                                width: "28px",
+                                height: "28px",
+                                backgroundColor: "#632126",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "50%",
+                                cursor: "pointer",
+                                boxShadow:
+                                  "0 4px 6px rgba(0,0,0,0.1)",
+                                zIndex: 20,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: "48px",
+                      position: "relative",
+                      width: `${totW}px`,
+                    }}
+                  >
+                    {/* Höhenanzeige - parallel zur linken Leiste, beginnt auf gleicher Höhe wie die Leiste vom Boden */}
+                    {maxH > 0 && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          left: "-140px",
+                          bottom: "48px",
+                          height: `${maxH}px`,
+                        }}
+                      >
+                        {/* Vertikale Linie parallel zur Leiste */}
                         <div
                           style={{
-                            position: "absolute",
-                            right: 0,
-                            bottom: 0,
-                            height: `${rightRailHeight}px`,
-                            width: `${railWidth}px`,
-                            backgroundColor: "#000000",
+                            position: "relative",
+                            width: "2px",
+                            height: "100%",
+                            backgroundColor: "#B3B4B3",
                           }}
-                        />
-
-                        {/* Regalbretter */}
-                        {pos.map((p, i) => (
-                          <div
-                            key={i}
-                            style={{
-                              position: "absolute",
-                              left: isLeft
-                                ? `${railWidth}px`
-                                : "0px",
-                              right: `${railWidth}px`,
-                              top: `${p}px`,
-                              height: `${thick}px`,
-                              backgroundColor: "#000000",
-                              borderTop: "2px solid #000000",
-                              borderBottom: "2px solid #000000",
-                            }}
-                          />
-                        ))}
-
-                        {/* Kleiderstange nur bei Modul K */}
-                        {mod.type === "K" && (
+                        >
                           <div
                             style={{
                               position: "absolute",
-                              left: isLeft
-                                ? `${railWidth + 4}px`
-                                : `${railWidth}px`,
-                              right: `${railWidth + 4}px`,
-                              top: `${135 * 0.2133}px`,
-                              height: "6px",
-                              backgroundColor: "#000000",
-                              borderRadius: "99px",
+                              top: 0,
+                              left: "-6px",
+                              width: "14px",
+                              height: "2px",
+                              backgroundColor: "#B3B4B3",
                             }}
                           />
-                        )}
-
-                        {/* Löschen-Button */}
-                        {hoveredId === mod.id && (
-                          <button
-                            onClick={() => removeModule(mod.id)}
+                          <div
                             style={{
                               position: "absolute",
-                              top: "-12px",
-                              left: "50%",
-                              transform: "translateX(-50%)",
-                              width: "28px",
-                              height: "28px",
-                              backgroundColor: "#632126",
-                              color: "white",
-                              border: "none",
-                              borderRadius: "50%",
-                              cursor: "pointer",
-                              boxShadow:
-                                "0 4px 6px rgba(0,0,0,0.1)",
-                              zIndex: 20,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
+                              bottom: 0,
+                              left: "-6px",
+                              width: "14px",
+                              height: "2px",
+                              backgroundColor: "#B3B4B3",
                             }}
-                          >
-                            ✕
-                          </button>
-                        )}
+                          />
+                        </div>
+                        {/* Text um 90 Grad gegen Uhrzeigersinn gedreht, links neben der Linie mit 8px Abstand */}
+                        <div
+                          style={{
+                            color: "#B3B4B3",
+                            whiteSpace: "nowrap",
+                            transform: "rotate(-90deg)",
+                            transformOrigin: "center center",
+                            position: "absolute",
+                            right: "10px",
+                            top: "50%",
+                          }}
+                        >
+                          {(realH / 10).toFixed(1)} cm
+                        </div>
                       </div>
-                    );
-                  })}
-                </div>
+                    )}
 
-                <div
-                  style={{
-                    marginTop: "48px",
-                    position: "relative",
-                    width: `${totW}px`,
-                  }}
-                >
-                  {/* Höhenanzeige - parallel zur linken Leiste, beginnt auf gleicher Höhe wie die Leiste vom Boden */}
-                  {maxH > 0 && (
+                    {/* Längenangabe */}
                     <div
                       style={{
-                        position: "absolute",
-                        left: "-140px",
-                        bottom: "48px",
-                        height: `${maxH}px`,
+                        width: `${totModuleWidth}px`,
+                        height: "2px",
+                        backgroundColor: "#B3B4B3",
+                        position: "relative",
                       }}
                     >
-                      {/* Vertikale Linie parallel zur Leiste */}
                       <div
                         style={{
-                          position: "relative",
+                          position: "absolute",
+                          left: 0,
+                          top: "-6px",
                           width: "2px",
-                          height: "100%",
+                          height: "14px",
                           backgroundColor: "#B3B4B3",
                         }}
-                      >
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: 0,
-                            left: "-6px",
-                            width: "14px",
-                            height: "2px",
-                            backgroundColor: "#B3B4B3",
-                          }}
-                        />
-                        <div
-                          style={{
-                            position: "absolute",
-                            bottom: 0,
-                            left: "-6px",
-                            width: "14px",
-                            height: "2px",
-                            backgroundColor: "#B3B4B3",
-                          }}
-                        />
-                      </div>
-                      {/* Text um 90 Grad gegen Uhrzeigersinn gedreht, links neben der Linie mit 8px Abstand */}
+                      />
                       <div
                         style={{
-                          color: "#B3B4B3",
-                          whiteSpace: "nowrap",
-                          transform: "rotate(-90deg)",
-                          transformOrigin: "center center",
                           position: "absolute",
-                          right: "10px",
-                          top: "50%",
+                          right: 0,
+                          top: "-6px",
+                          width: "2px",
+                          height: "14px",
+                          backgroundColor: "#B3B4B3",
                         }}
-                      >
-                        {(realH / 10).toFixed(1)} cm
-                      </div>
+                      />
                     </div>
-                  )}
-
-                  {/* Längenangabe */}
-                  <div
-                    style={{
-                      width: `${totModuleWidth}px`,
-                      height: "2px",
-                      backgroundColor: "#B3B4B3",
-                      position: "relative",
-                    }}
-                  >
                     <div
                       style={{
                         position: "absolute",
-                        left: 0,
-                        top: "-6px",
-                        width: "2px",
-                        height: "14px",
-                        backgroundColor: "#B3B4B3",
+                        top: "8px",
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                        color: "#B3B4B3",
+                        whiteSpace: "nowrap",
                       }}
-                    />
-                    <div
-                      style={{
-                        position: "absolute",
-                        right: 0,
-                        top: "-6px",
-                        width: "2px",
-                        height: "14px",
-                        backgroundColor: "#B3B4B3",
-                      }}
-                    />
-                  </div>
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: "8px",
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                      color: "#B3B4B3",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {totLen} cm
+                    >
+                      {totLen} cm
+                    </div>
                   </div>
                 </div>
               </div>
@@ -681,7 +693,7 @@ export default function App() {
             <h2
               style={{ marginBottom: "16px", color: "#000000" }}
             >
-              Module Bibliothek
+              Module Library
             </h2>
             <div
               style={{
@@ -786,9 +798,7 @@ export default function App() {
                             marginBottom: "12px",
                           }}
                         >
-                          {modules.length === 0
-                            ? "Länge wählen:"
-                            : "Länge wählen:"}
+                          Select length:
                         </p>
 
                         {modules.length === 0 ? (
@@ -885,7 +895,7 @@ export default function App() {
                 }}
               >
                 <h2 style={{ margin: 0, color: "#000000" }}>
-                  Übersicht
+                  Overview
                 </h2>
                 <button
                   onClick={() => setModules([])}
@@ -898,7 +908,7 @@ export default function App() {
                     borderRadius: "4px",
                   }}
                 >
-                  Leeren
+                  Clear
                 </button>
               </div>
               <div
@@ -917,7 +927,7 @@ export default function App() {
                   }}
                 >
                   <span style={{ color: "#000000" }}>
-                    Anzahl Module:
+                    Number of modules:
                   </span>
                   <span style={{ color: "#0f172a" }}>
                     {modules.length}
@@ -930,7 +940,7 @@ export default function App() {
                   }}
                 >
                   <span style={{ color: "#000000" }}>
-                    Gesamtlänge:
+                    Total length:
                   </span>
                   <span style={{ color: "#0f172a" }}>
                     {totLen}cm
@@ -943,7 +953,7 @@ export default function App() {
           {modules.length > 0 && (
             <div style={{ padding: "24px", borderTop: "1px solid #e2e8f0" }}>
               <h2 style={{ marginBottom: "16px", color: "#000000" }}>
-                Anfrage senden
+                Send Inquiry
               </h2>
               <div
                 style={{
@@ -954,7 +964,7 @@ export default function App() {
                 }}
               >
                 <p style={{ color: "#64748b", marginBottom: "16px" }}>
-                  Schließen Sie Ihre Konfiguration ab und senden Sie uns eine Anfrage.
+                  Complete your configuration and send us an inquiry.
                 </p>
                 
                 <div style={{ marginBottom: "12px" }}>
@@ -965,7 +975,7 @@ export default function App() {
                     type="text"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    placeholder="Ihr Name"
+                    placeholder="Your name"
                     style={{
                       width: "100%",
                       padding: "8px 12px",
@@ -979,13 +989,13 @@ export default function App() {
 
                 <div style={{ marginBottom: "12px" }}>
                   <label style={{ display: "block", color: "#334155", marginBottom: "4px" }}>
-                    E-Mail
+                    Email
                   </label>
                   <input
                     type="email"
                     value={customerEmail}
                     onChange={(e) => setCustomerEmail(e.target.value)}
-                    placeholder="ihre.email@beispiel.de"
+                    placeholder="your.email@example.com"
                     style={{
                       width: "100%",
                       padding: "8px 12px",
@@ -999,12 +1009,12 @@ export default function App() {
 
                 <div style={{ marginBottom: "16px" }}>
                   <label style={{ display: "block", color: "#334155", marginBottom: "4px" }}>
-                    Nachricht (optional)
+                    Message (optional)
                   </label>
                   <textarea
                     value={customerMessage}
                     onChange={(e) => setCustomerMessage(e.target.value)}
-                    placeholder="Anmerkung"
+                    placeholder="Your message"
                     rows={3}
                     style={{
                       width: "100%",
@@ -1024,9 +1034,9 @@ export default function App() {
                       `${idx + 1}. ${m.type} - ${m.length === 'short' ? '35cm' : '57.5cm'}`
                     ).join('%0D%0A');
                     
-                    const emailBody = `Hallo,%0D%0A%0D%0AIch möchte folgende Regalsystem-Konfiguration anfragen:%0D%0A%0D%0A${moduleList}%0D%0A%0D%0AAnzahl Module: ${modules.length}%0D%0AGesamtlänge: ${totLen}cm%0D%0AHöhe: ${(realH / 10).toFixed(1)}cm%0D%0A%0D%0AKontaktdaten:%0D%0AName: ${customerName}%0D%0AE-Mail: ${customerEmail}%0D%0A%0D%0ANachricht:%0D%0A${customerMessage}%0D%0A%0D%0AMit freundlichen Grüßen`;
+                    const emailBody = `Hello,%0D%0A%0D%0AI would like to request the following shelf system configuration:%0D%0A%0D%0A${moduleList}%0D%0A%0D%0ANumber of modules: ${modules.length}%0D%0ATotal length: ${totLen}cm%0D%0AHeight: ${(realH / 10).toFixed(1)}cm%0D%0A%0D%0AContact details:%0D%0AName: ${customerName}%0D%0AEmail: ${customerEmail}%0D%0A%0D%0AMessage:%0D%0A${customerMessage}%0D%0A%0D%0ABest regards`;
                     
-                    window.location.href = `mailto:sophie@lerchl.one?subject=Regalsystem Anfrage&body=${emailBody}`;
+                    window.location.href = `mailto:sophie@lerchl.one?subject=Shelf System Inquiry&body=${emailBody}`;
                   }}
                   style={{
                     width: "100%",
@@ -1038,7 +1048,7 @@ export default function App() {
                     cursor: "pointer",
                   }}
                 >
-                  Anfrage per E-Mail senden
+                  Send inquiry via email
                 </button>
               </div>
             </div>
